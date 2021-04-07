@@ -67,10 +67,10 @@ func (s *simple) get(key interface{}) (ok bool, v interface{}, err error) {
 	return
 }
 
-func (s *simple) Set(key interface{}, v interface{}) (err error) {
+func (s *simple) Set(k interface{}, v interface{}) (err error) {
 
 	s.storeMux.Lock()
-	s.store[key] = &entry{
+	s.store[k] = &entry{
 		value: v,
 	}
 	s.storeMux.Unlock()
@@ -82,5 +82,12 @@ func (s *simple) Clean() {
 
 	s.storeMux.Lock()
 	s.store = make(map[interface{}]*entry)
+	s.storeMux.Unlock()
+}
+
+func (s *simple) Delete(k interface{}) {
+
+	s.storeMux.Lock()
+	delete(s.store, k)
 	s.storeMux.Unlock()
 }
