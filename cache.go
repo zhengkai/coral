@@ -4,6 +4,8 @@ package coral
 type Cache interface {
 	Set(k, v interface{}) (err error)
 	Get(k interface{}) (v interface{}, err error)
+	Clean()
 }
 
-type loadFunc func(k interface{}) (v interface{}, err error)
+// LoadFunc if Get miss, load data by this
+type LoadFunc func(k interface{}) (v interface{}, err error)

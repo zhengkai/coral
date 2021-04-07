@@ -1,6 +1,13 @@
 package coral
 
-// Build ...
-func Build(size int) (c Cache, err error) {
+// BuildSimple ...
+func BuildSimple(loadFn LoadFunc) (c Cache) {
+
+	c = &simple{
+		store:  make(map[interface{}]*entry),
+		load:   make(map[interface{}]*entry),
+		loadFn: loadFn,
+	}
+
 	return
 }
