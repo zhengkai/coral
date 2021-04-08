@@ -2,6 +2,8 @@ package coral
 
 import "sync"
 
+// no expire, no eviction
+
 type simple struct {
 	storeMux sync.RWMutex
 	store    map[interface{}]*entry
@@ -12,23 +14,63 @@ type simple struct {
 }
 
 // Get
-func (s *simple) Get(key interface{}) (v interface{}, err error) {
+func (s *simple) Get(k interface{}) (v interface{}, err error) {
 
-	ok, v, err := s.get(key)
+	ok, v, err := s.storeGet(k)
 	if ok {
 		return
 	}
 
+	ok, e, v, err := s.loadGet(k)
+	if ok {
+		return
+	}
+
+	v, err = s.loadExec(k, e)
+	return
+}
+
+func (s *simple) storeGet(k interface{}) (ok bool, v interface{}, err error) {
+	s.storeMux.RLock()
+	e, ok := s.store[k]
+	s.storeMux.RUnlock()
+	if ok {
+		v = e.value
+		err = e.err
+	}
+	return
+}
+
+func (s *simple) loadExec(k interface{}, e *entry) (v interface{}, err error) {
+
+	e.value, e.err = s.loadFn(k)
+	v = e.value
+	err = e.err
+	e.mux.Unlock()
+
+	s.storeMux.Lock()
+	s.store[k] = e
+	s.storeMux.Unlock()
+
 	s.loadMux.Lock()
-	e, ok := s.load[key]
+	delete(s.load, k)
+	s.loadMux.Unlock()
+
+	return
+}
+
+func (s *simple) loadGet(k interface{}) (ok bool, e *entry, v interface{}, err error) {
+	s.loadMux.Lock()
+	e, ok = s.load[k]
 	if !ok {
-		ok, v, err = s.get(key)
+		ok, v, err = s.storeGet(k)
 		if ok {
+			s.loadMux.Unlock()
 			return
 		}
 		e = &entry{}
 		e.mux.Lock()
-		s.load[key] = e
+		s.load[k] = e
 	}
 	s.loadMux.Unlock()
 
@@ -37,33 +79,8 @@ func (s *simple) Get(key interface{}) (v interface{}, err error) {
 		v = e.value
 		err = e.err
 		e.mux.RUnlock()
-		return
 	}
 
-	e.value, e.err = s.loadFn(key)
-	v = e.value
-	err = e.err
-	e.mux.Unlock()
-
-	s.storeMux.Lock()
-	s.store[key] = e
-	s.storeMux.Unlock()
-
-	s.loadMux.Lock()
-	delete(s.load, key)
-	s.loadMux.Unlock()
-
-	return
-}
-
-func (s *simple) get(key interface{}) (ok bool, v interface{}, err error) {
-	s.storeMux.RLock()
-	e, ok := s.store[key]
-	s.storeMux.RUnlock()
-	if ok {
-		v = e.value
-		err = e.err
-	}
 	return
 }
 
