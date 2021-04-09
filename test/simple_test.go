@@ -10,43 +10,47 @@ import (
 )
 
 func TestSimpleConcurrency(t *testing.T) {
-	// t.Fatal("not implemented")
 
-	var mux sync.RWMutex
-	mux.Lock()
+	for j := 0; j < 100; j++ {
 
-	var count uint32
+		concurrency := 20
 
-	var wg sync.WaitGroup
-	wg.Add(100)
+		var mux sync.RWMutex
+		mux.Lock()
 
-	c := coral.BuildSimple(func(k interface{}) (v interface{}, err error) {
-		atomic.AddUint32(&count, 1)
-		v = k.(int) * 100
-		return
-	})
+		var count uint32
 
-	for i := 0; i < 100; i++ {
-		go func() {
-			mux.RLock()
-			v, err := c.Get(13)
-			wg.Done()
-			if v != 1300 {
-				t.Error(`simple load fail`)
-			}
-			if err != nil {
-				t.Error(`simple load err`)
-			}
-		}()
-	}
+		var wg sync.WaitGroup
+		wg.Add(concurrency)
 
-	time.Sleep(time.Second / 100)
+		c := coral.BuildSimple(func(k interface{}) (v interface{}, err error) {
+			atomic.AddUint32(&count, 1)
+			v = k.(int) * 100
+			return
+		})
 
-	mux.Unlock()
-	wg.Wait()
+		for i := 0; i < concurrency; i++ {
+			go func() {
+				mux.RLock()
+				v, err := c.Get(13)
+				wg.Done()
+				if v != 1300 {
+					t.Error(`simple load fail`)
+				}
+				if err != nil {
+					t.Error(`simple load err`)
+				}
+			}()
+		}
 
-	if count != 1 {
-		t.Error(`simple concurrency failed`)
+		time.Sleep(time.Second / 100)
+
+		mux.Unlock()
+		wg.Wait()
+
+		if count != 1 {
+			t.Error(`simple concurrency failed`)
+		}
 	}
 }
 
