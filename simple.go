@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/zhengkai/coral"
@@ -16,35 +15,6 @@ func simpleTest() {
 	x.Set(1, 2)
 	i, err := x.Get(1)
 	fmt.Println(i, err)
-}
-
-func simpleConcurrency() {
-
-	var mux sync.RWMutex
-	mux.Lock()
-
-	c := coral.BuildSimple(func(k interface{}) (v interface{}, err error) {
-
-		fmt.Println(`new load`, k)
-
-		v = k.(int) * 100
-		return
-	})
-
-	for i := 0; i < 100; i++ {
-		j := i
-		go func() {
-			fmt.Println(`start`, j)
-			mux.RLock()
-			v, _ := c.Get(13)
-			fmt.Println(`get`, v)
-		}()
-	}
-
-	time.Sleep(time.Second)
-
-	fmt.Println(`unlock`)
-	mux.Unlock()
 }
 
 func simpleTimeout() {
