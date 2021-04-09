@@ -1,0 +1,43 @@
+name: Unit testing
+on:
+  push:
+    branches:
+      - master
+jobs:
+  Unit-Testing:
+    runs-on: ubuntu-latest
+    env:
+      SRC: ${{ github.workspace }}/master
+      DEV: ${{ github.workspace }}/dev
+    steps:
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.16
+      - name: Check out repository code
+        uses: actions/checkout@v2
+        with:
+          path: 'master'
+          ref: 'master'
+      - name: Check out test code
+        uses: actions/checkout@v2
+        with:
+          path: 'dev'
+          ref: 'dev'
+      - name: Do testing
+        run: |
+          ln -s "$SRC" "${DEV}/src"
+          cd "${DEV}/test"
+          make start
+      - name: Coveralls
+        env:
+          GO111MODULE: off
+          COVERALLS_TOKEN: ${{ secrets.COVERALLS_TOKEN }}
+          REPO_BASE: /home/runner/go/src/github.com
+        run: |
+          REPO="${REPO_BASE}/${GITHUB_REPOSITORY}"
+          mkdir -p "${REPO_BASE}/${GITHUB_ACTOR}"
+          ln -s "$SRC" "$REPO"
+          cd "$REPO"
+          go get github.com/mattn/goveralls
+          goveralls "-coverprofile=${DEV}/test/coverage.out"
