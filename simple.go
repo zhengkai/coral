@@ -1,8 +1,11 @@
 package coral
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
-// no expire, no eviction
+// no eviction
 
 type simple struct {
 	storeMux sync.RWMutex
@@ -35,6 +38,10 @@ func (s *simple) storeGet(k interface{}) (ok bool, v interface{}, err error) {
 	e, ok := s.store[k]
 	s.storeMux.RUnlock()
 	if ok {
+		if e.expire != nil && time.Now().After(*e.expire) {
+			ok = false
+			return
+		}
 		v = e.value
 		err = e.err
 	}
@@ -43,14 +50,16 @@ func (s *simple) storeGet(k interface{}) (ok bool, v interface{}, err error) {
 
 func (s *simple) loadExec(k interface{}, e *entry) (v interface{}, err error) {
 
-	e.value, e.err = s.loadFn(k)
+	e.value, e.expire, e.err = s.loadFn(k)
 	v = e.value
 	err = e.err
 	e.mux.Unlock()
 
-	s.storeMux.Lock()
-	s.store[k] = e
-	s.storeMux.Unlock()
+	if err == nil {
+		s.storeMux.Lock()
+		s.store[k] = e
+		s.storeMux.Unlock()
+	}
 
 	s.loadMux.Lock()
 	delete(s.load, k)
@@ -97,8 +106,9 @@ func (s *simple) Set(k interface{}, v interface{}) (err error) {
 
 func (s *simple) Clean() {
 
+	m := make(map[interface{}]*entry)
 	s.storeMux.Lock()
-	s.store = make(map[interface{}]*entry)
+	s.store = m
 	s.storeMux.Unlock()
 }
 

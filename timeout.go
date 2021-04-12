@@ -11,13 +11,13 @@ var ErrLoadFuncTimeout = errors.New(`loadFn timeout`)
 // LoadDeadline add timeout with LoadFunc
 func LoadDeadline(loadFn LoadFunc, timeout time.Duration) LoadFunc {
 
-	return func(k interface{}) (v interface{}, err error) {
+	return func(k interface{}) (v interface{}, expire *time.Time, err error) {
 
 		ch := make(chan *entry)
 
 		go func() {
 			e := &entry{}
-			e.value, e.err = loadFn(k)
+			e.value, e.expire, e.err = loadFn(k)
 			ch <- e
 		}()
 
@@ -26,6 +26,7 @@ func LoadDeadline(loadFn LoadFunc, timeout time.Duration) LoadFunc {
 
 			v = e.value
 			err = e.err
+			expire = e.expire
 
 		case <-time.After(timeout):
 
