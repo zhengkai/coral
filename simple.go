@@ -8,7 +8,7 @@ import (
 )
 
 func simpleTest() {
-	x := coral.BuildSimple(func(k interface{}) (v interface{}, err error) {
+	x := coral.BuildSimple(func(k interface{}) (v interface{}, expire *time.Time, err error) {
 		return
 	})
 
@@ -19,7 +19,7 @@ func simpleTest() {
 
 func simpleTimeout() {
 
-	loadFn := func(k interface{}) (v interface{}, err error) {
+	loadFn := func(k interface{}) (v interface{}, expire *time.Time, err error) {
 		fmt.Println(`new load`, k)
 		time.Sleep(time.Second / 4)
 		v = k.(int) * 100

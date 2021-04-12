@@ -1,6 +1,7 @@
 package test
 
 import (
+	"math/rand"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -23,7 +24,7 @@ func TestSimpleConcurrency(t *testing.T) {
 		var wg sync.WaitGroup
 		wg.Add(concurrency)
 
-		c := coral.BuildSimple(func(k interface{}) (v interface{}, err error) {
+		c := coral.BuildSimple(func(k interface{}) (v interface{}, expire *time.Time, err error) {
 			atomic.AddUint32(&count, 1)
 			v = k.(int) * 100
 			return
@@ -65,7 +66,7 @@ func TestSimpleConcurrencyDelay(t *testing.T) {
 	var wg sync.WaitGroup
 	wg.Add(100)
 
-	c := coral.BuildSimple(func(k interface{}) (v interface{}, err error) {
+	c := coral.BuildSimple(func(k interface{}) (v interface{}, expire *time.Time, err error) {
 		atomic.AddUint32(&count, 1)
 		time.Sleep(time.Second / 100)
 		v = k.(int) * 100
@@ -100,7 +101,7 @@ func TestSimpleMisc(t *testing.T) {
 
 	var count int
 
-	c := coral.BuildSimple(func(k interface{}) (v interface{}, err error) {
+	c := coral.BuildSimple(func(k interface{}) (v interface{}, expire *time.Time, err error) {
 		count++
 		time.Sleep(time.Second / 100)
 		v = k.(int) * 100
@@ -133,9 +134,46 @@ func TestSimpleMisc(t *testing.T) {
 	}
 }
 
+func TestSimpleExpire(t *testing.T) {
+
+	var prev uint64
+
+	loadFn := func(k interface{}) (v interface{}, expire *time.Time, err error) {
+		e := time.Now().Add(time.Second / 200)
+		expire = &e
+		for {
+			r := rand.Uint64()
+			if r != prev {
+				v = r
+				prev = r
+				break
+			}
+		}
+		return
+	}
+
+	c := coral.BuildSimple(loadFn)
+
+	v, _ := c.Get(1)
+
+	i := v.(uint64)
+
+	v, _ = c.Get(1)
+	if i != v.(uint64) {
+		t.Error(`cache not work`)
+	}
+	time.Sleep(time.Second / 100)
+
+	v, _ = c.Get(1)
+
+	if i == v.(uint64) {
+		t.Error(`expire not work`)
+	}
+}
+
 func TestSimpleDeadline(t *testing.T) {
 
-	loadFn := func(k interface{}) (v interface{}, err error) {
+	loadFn := func(k interface{}) (v interface{}, expire *time.Time, err error) {
 		time.Sleep(time.Second / 100)
 		v = k.(int) * 100
 		return
