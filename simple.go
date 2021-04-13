@@ -93,11 +93,12 @@ func (s *simple) loadGet(k interface{}) (ok bool, e *entry, v interface{}, err e
 	return
 }
 
-func (s *simple) Set(k interface{}, v interface{}) (err error) {
+func (s *simple) Set(k interface{}, v interface{}, expire *time.Time) (err error) {
 
 	s.storeMux.Lock()
 	s.store[k] = &entry{
-		value: v,
+		value:  v,
+		expire: expire,
 	}
 	s.storeMux.Unlock()
 
