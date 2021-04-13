@@ -55,7 +55,7 @@ func (s *simple) loadExec(k interface{}, e *entry) (v interface{}, err error) {
 	err = e.err
 	e.mux.Unlock()
 
-	if err == nil {
+	if err == nil || e.expire != nil {
 		s.storeMux.Lock()
 		s.store[k] = e
 		s.storeMux.Unlock()
