@@ -126,7 +126,7 @@ func TestSimpleMisc(t *testing.T) {
 		t.Error(`simple clean fail`)
 	}
 
-	c.Set(3, true)
+	c.Set(3, true, nil)
 	c.Get(3)
 
 	if count != 5 {
