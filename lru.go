@@ -16,19 +16,29 @@ type lru struct {
 	loadMux sync.Mutex
 	load    map[interface{}]*entryRU
 
+	stats *Stats
+
 	list *list.List
 
 	evictThreshold int
 	capacity       int
 }
 
-// Get
+func (s *lru) StatsOff() {
+	s.stats = nil
+}
+
+func (s *lru) Stats() *Stats {
+	return s.stats
+}
+
 func (s *lru) Get(k interface{}) (v interface{}, err error) {
 
 	e := s.storeGet(k)
 	if e != nil {
 		v = e.value
 		err = e.err
+		s.stats.IncHit()
 		return
 	}
 
@@ -36,24 +46,26 @@ func (s *lru) Get(k interface{}) (v interface{}, err error) {
 	if ok {
 		v = e.value
 		err = e.err
+		s.stats.IncWait()
 		return
 	}
 
 	v, err = s.loadExec(k, e)
+	s.stats.IncMiss()
 	return
 }
 
-func (s *lru) storeGet(k interface{}) (en *entryRU) {
+func (s *lru) storeGet(k interface{}) (e *entryRU) {
 
 	s.storeMux.Lock()
-	en, ok := s.store[k]
+	e, ok := s.store[k]
 	defer s.storeMux.Unlock()
 	if ok {
-		if en.expire != nil && time.Now().After(*en.expire) {
-			en = nil
+		if e.expire != nil && time.Now().After(*e.expire) {
+			e = nil
 			return
 		}
-		s.list.MoveToFront(en.cur)
+		s.list.MoveToFront(e.cur)
 	}
 	return
 }
@@ -127,9 +139,7 @@ func (s *lru) Set(k interface{}, v interface{}, expire *time.Time) (err error) {
 		cur := s.list.PushFront(k)
 		e.cur = cur
 		s.store[k] = e
-		if s.list.Len() > s.evictThreshold {
-			s.slim()
-		}
+		s.slim()
 	}
 	s.storeMux.Unlock()
 
@@ -146,26 +156,35 @@ func (s *lru) Clean() {
 }
 
 func (s *lru) slim() {
+	if s.list.Len() < s.evictThreshold {
+		return
+	}
 
 	now := time.Now()
+	var cnt uint64
 	for k, v := range s.store {
 		if v.expire != nil && v.expire.Before(now) {
-			delete(s.store, k)
 			s.list.Remove(v.cur)
+			delete(s.store, k)
+			cnt++
 		}
 	}
 	for i := s.list.Len(); i >= s.capacity; i-- {
 		k := s.list.Remove(s.list.Back())
 		delete(s.store, k)
+		cnt++
+	}
+	if cnt > 0 {
+		s.stats.IncEvict(cnt)
 	}
 }
 
 func (s *lru) Delete(k interface{}) {
 
 	s.storeMux.Lock()
-	en, ok := s.store[k]
+	e, ok := s.store[k]
 	if ok {
-		s.list.Remove(en.cur)
+		s.list.Remove(e.cur)
 		delete(s.store, k)
 	}
 	s.storeMux.Unlock()

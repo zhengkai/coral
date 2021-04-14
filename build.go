@@ -9,6 +9,7 @@ func BuildSimple(loadFn LoadFunc) (c Cache) {
 		store:  make(map[interface{}]*entry),
 		load:   make(map[interface{}]*entry),
 		loadFn: loadFn,
+		stats:  &Stats{},
 	}
 
 	return
@@ -29,6 +30,7 @@ func BuildLRU(loadFn LoadFunc, capacity int, evictThreshold int) (c Cache) {
 		load:   make(map[interface{}]*entryRU),
 		loadFn: loadFn,
 		list:   list.New(),
+		stats:  &Stats{},
 
 		capacity:       capacity,
 		evictThreshold: evictThreshold,

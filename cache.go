@@ -8,6 +8,9 @@ type Cache interface {
 	Get(k interface{}) (v interface{}, err error)
 	Clean()
 	Delete(k interface{})
+
+	StatsOff()
+	Stats() (st *Stats)
 }
 
 // LoadFunc if Get miss, load data by this

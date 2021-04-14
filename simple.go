@@ -14,22 +14,34 @@ type simple struct {
 	loadFn  LoadFunc
 	loadMux sync.Mutex
 	load    map[interface{}]*entry
+
+	stats *Stats
 }
 
-// Get
+func (s *simple) StatsOff() {
+	s.stats = nil
+}
+
+func (s *simple) Stats() *Stats {
+	return s.stats
+}
+
 func (s *simple) Get(k interface{}) (v interface{}, err error) {
 
 	ok, v, err := s.storeGet(k)
 	if ok {
+		s.stats.IncHit()
 		return
 	}
 
 	ok, e, v, err := s.loadGet(k)
 	if ok {
+		s.stats.IncWait()
 		return
 	}
 
 	v, err = s.loadExec(k, e)
+	s.stats.IncMiss()
 	return
 }
 
