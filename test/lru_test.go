@@ -108,6 +108,8 @@ func TestLRUMisc(t *testing.T) {
 		return
 	}, 10, 10)
 
+	c.StatsOff()
+
 	c.Get(1)
 	c.Get(2)
 	c.Delete(1)
@@ -212,6 +214,27 @@ func TestLRUBuild(t *testing.T) {
 	if cnt != 2 {
 		t.Error(`build default capacity not 1000`)
 	}
+
+	c.Clean()
+	for i := 1000; i > 0; i-- {
+		c.Get(i)
+	}
+	if c.Stats().Hit != 0 {
+		t.Error(`clean fail`)
+	}
+	for i := 0; i < 2000; i++ {
+		c.Get(i)
+	}
+	if c.Stats().Hit != 1000 {
+		t.Error(`stats hit fail`)
+	}
+	c.Stats().Report()
+
+	c.StatsOff()
+	for i := 0; i < 2000; i++ {
+		c.Get(i)
+	}
+	c.Stats().Report()
 }
 
 func TestLRUEviction(t *testing.T) {
@@ -288,4 +311,6 @@ func TestLRUSetSlim(t *testing.T) {
 	if cnt != 2 {
 		t.Error(`LRU not work`)
 	}
+
+	c.Stats().Report()
 }

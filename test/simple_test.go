@@ -12,7 +12,7 @@ import (
 
 func TestSimpleConcurrency(t *testing.T) {
 
-	for j := 0; j < 100; j++ {
+	for j := 0; j < 200; j++ {
 
 		concurrency := 20
 
@@ -29,6 +29,10 @@ func TestSimpleConcurrency(t *testing.T) {
 			v = k.(int) * 100
 			return
 		})
+
+		if j%2 == 0 {
+			c.StatsOff()
+		}
 
 		for i := 0; i < concurrency; i++ {
 			go func() {
@@ -93,7 +97,11 @@ func TestSimpleConcurrencyDelay(t *testing.T) {
 	wg.Wait()
 
 	if count != 1 {
-		t.Error(`simple concurrency failed`)
+		t.Error(`simple concurrency fail`)
+	}
+	st := c.Stats()
+	if st.Wait != 99 {
+		t.Error(`simple concurrency wait count fail`)
 	}
 }
 
@@ -107,6 +115,8 @@ func TestSimpleMisc(t *testing.T) {
 		v = k.(int) * 100
 		return
 	})
+
+	c.StatsOff()
 
 	c.Get(1)
 	c.Get(2)
