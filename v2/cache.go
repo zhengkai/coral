@@ -13,8 +13,8 @@ type Cache[K comparable, V any] interface {
 	Reset()
 	Delete(p K)
 
-	SetStats(*Stats)
-	GetStats() *Stats
+	SetStats(IStats)
+	GetStats() IStats
 }
 
 type cache[K comparable, V any] struct {
@@ -22,13 +22,37 @@ type cache[K comparable, V any] struct {
 	pool  map[K]*entry[V]
 	list  *list.List
 	mux   sync.Mutex
-	stats *Stats
+	stats IStats
 }
 
-func (c *cache[K, V]) SetStats(s *Stats) {
+func (c *cache[K, V]) SetStats(s IStats) {
 	c.stats = s
 }
 
-func (c *cache[K, V]) GetStats() *Stats {
+func (c *cache[K, V]) GetStats() IStats {
 	return c.stats
+}
+
+func (c *cache[K, V]) statsHit() {
+	if c.stats != nil {
+		c.stats.IncHit()
+	}
+}
+
+func (c *cache[K, V]) statsMiss() {
+	if c.stats != nil {
+		c.stats.IncMiss()
+	}
+}
+
+func (c *cache[K, V]) statsWait() {
+	if c.stats != nil {
+		c.stats.IncWait()
+	}
+}
+
+func (c *cache[K, V]) statsEvict(i uint64) {
+	if c.stats != nil {
+		c.stats.IncEvict(i)
+	}
 }

@@ -5,6 +5,14 @@ import (
 	"sync/atomic"
 )
 
+// IStats interface of stats
+type IStats interface {
+	IncHit()
+	IncMiss()
+	IncWait()
+	IncEvict(uint64)
+}
+
 // Stats ...
 type Stats struct {
 	Hit   uint64

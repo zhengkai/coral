@@ -70,7 +70,7 @@ func (c *lru[K, V]) slim() {
 		cnt++
 	}
 	if cnt > 0 {
-		c.stats.IncEvict(cnt)
+		c.statsEvict(cnt)
 	}
 }
 
@@ -81,7 +81,7 @@ func (c *lru[K, V]) Get(k K) (v V, err error) {
 	if ok {
 		c.list.MoveToFront(ey.cur)
 		c.mux.Unlock()
-		c.stats.IncHit()
+		c.statsHit()
 		return ey.v, nil
 	}
 	if ey == nil {
@@ -93,10 +93,10 @@ func (c *lru[K, V]) Get(k K) (v V, err error) {
 		go func() {
 			ey.set(c.load(k))
 		}()
-		c.stats.IncMiss()
+		c.statsMiss()
 	} else {
 		c.mux.Unlock()
-		c.stats.IncWait()
+		c.statsWait()
 	}
 	ey.wait()
 	return ey.v, ey.err
