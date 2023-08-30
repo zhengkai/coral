@@ -79,6 +79,7 @@ func (c *lru[K, V]) Get(k K) (v V, err error) {
 	c.mux.Lock()
 	ey, ok := c.pool[k].check()
 	if ok {
+		c.list.MoveToFront(ey.cur)
 		c.mux.Unlock()
 		c.stats.IncHit()
 		return ey.v, nil
