@@ -35,24 +35,24 @@ func (c *cache[K, V]) GetStats() IStats {
 
 func (c *cache[K, V]) statsHit() {
 	if c.stats != nil {
-		c.stats.IncHit()
+		go c.stats.IncHit()
 	}
 }
 
 func (c *cache[K, V]) statsMiss() {
 	if c.stats != nil {
-		c.stats.IncMiss()
+		go c.stats.IncMiss()
 	}
 }
 
 func (c *cache[K, V]) statsWait() {
 	if c.stats != nil {
-		c.stats.IncWait()
+		go c.stats.IncWait()
 	}
 }
 
 func (c *cache[K, V]) statsEvict(i uint64) {
 	if c.stats != nil {
-		c.stats.IncEvict(i)
+		go c.stats.IncEvict(i)
 	}
 }

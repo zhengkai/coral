@@ -23,34 +23,22 @@ type Stats struct {
 
 // IncHit increment hit count
 func (st *Stats) IncHit() {
-	if st == nil {
-		return
-	}
-	go atomic.AddUint64(&st.Hit, 1)
+	atomic.AddUint64(&st.Hit, 1)
 }
 
 // IncMiss increment miss count
 func (st *Stats) IncMiss() {
-	if st == nil {
-		return
-	}
-	go atomic.AddUint64(&st.Miss, 1)
+	atomic.AddUint64(&st.Miss, 1)
 }
 
 // IncWait increment wait count
 func (st *Stats) IncWait() {
-	if st == nil {
-		return
-	}
-	go atomic.AddUint64(&st.Wait, 1)
+	atomic.AddUint64(&st.Wait, 1)
 }
 
 // IncEvict increment evict count
 func (st *Stats) IncEvict(i uint64) {
-	if st == nil {
-		return
-	}
-	go atomic.AddUint64(&st.Evict, i)
+	atomic.AddUint64(&st.Evict, i)
 }
 
 func (st *Stats) String() string {
