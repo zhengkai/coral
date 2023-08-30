@@ -37,6 +37,7 @@ func (c *simple[K, V]) Get(k K) (v V, err error) {
 	ey, ok := c.pool[k].check()
 	if ok {
 		c.mux.Unlock()
+		c.stats.IncHit()
 		return ey.v, nil
 	}
 	if ey == nil {
@@ -46,8 +47,10 @@ func (c *simple[K, V]) Get(k K) (v V, err error) {
 		go func() {
 			ey.set(c.load(k))
 		}()
+		c.stats.IncMiss()
 	} else {
 		c.mux.Unlock()
+		c.stats.IncWait()
 	}
 	ey.wait()
 	return ey.v, ey.err
