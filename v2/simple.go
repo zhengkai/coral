@@ -46,6 +46,8 @@ func (c *simple[K, V]) Get(k K) (v V, err error) {
 		go func() {
 			ey.set(c.load(k))
 		}()
+	} else {
+		c.mux.Unlock()
 	}
 	ey.wait()
 	return ey.v, ey.err
