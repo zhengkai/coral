@@ -1,7 +1,7 @@
 start:
 	go test -v -test.bench="test" -test.benchmem -coverpkg github.com/zhengkai/coral/v2 -covermode=atomic -coverprofile=coverage.out
 
-start:
+race:
 	go test -race -v -test.bench="test" -test.benchmem -coverpkg github.com/zhengkai/coral/v2 -covermode=atomic -coverprofile=coverage.out
 
 html:

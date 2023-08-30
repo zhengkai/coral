@@ -66,18 +66,19 @@ func TestSimpleConcurrencyDelay(t *testing.T) {
 	var mux sync.RWMutex
 	mux.Lock()
 
-	var count uint32
-
 	var wg sync.WaitGroup
 	wg.Add(100)
 
+	count := &atomic.Uint32{}
+
 	c := coral.NewSimple(func(k int) (v int, expire *time.Time, err error) {
-		atomic.AddUint32(&count, 1)
+		count.Add(1)
 		time.Sleep(time.Second / 100)
 		v = k * 100
 		return
 	})
-	c.SetStats(&coral.Stats{})
+	st := &coral.Stats{}
+	c.SetStats(st)
 
 	for i := 0; i < 100; i++ {
 		go func() {
@@ -98,10 +99,9 @@ func TestSimpleConcurrencyDelay(t *testing.T) {
 	mux.Unlock()
 	wg.Wait()
 
-	if count != 1 {
+	if count.Load() != 1 {
 		t.Error(`simple concurrency fail`)
 	}
-	st := c.GetStats()
 	if st.Wait != 99 {
 		t.Error(`simple concurrency wait count fail`)
 	}
