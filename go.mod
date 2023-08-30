@@ -1,10 +1,7 @@
 module dev
 
-go 1.16
+go 1.21.0
 
-require (
-	github.com/bluele/gcache v0.0.2 // indirect
-	github.com/zhengkai/coral v0.0.0
-)
+require github.com/zhengkai/coral/v2 v2.0.0
 
-replace github.com/zhengkai/coral => ./src
+replace github.com/zhengkai/coral/v2 => ./src/v2
