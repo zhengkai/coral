@@ -8,7 +8,7 @@ type simple[K comparable, V any] struct {
 	cache[K, V]
 }
 
-// NewSimple ...
+// NewSimple 无淘汰全部缓存，不太可能用上，只是功能最少，作为其他缓存的参考
 func NewSimple[K comparable, V any](load Load[K, V]) Cache[K, V] {
 	o := simple[K, V]{
 		cache[K, V]{
@@ -20,7 +20,6 @@ func NewSimple[K comparable, V any](load Load[K, V]) Cache[K, V] {
 }
 
 func (c *simple[K, V]) Set(k K, v V, expire *time.Time) {
-
 	en := &entry[V]{
 		v:      v,
 		expire: expire,
@@ -32,7 +31,6 @@ func (c *simple[K, V]) Set(k K, v V, expire *time.Time) {
 }
 
 func (c *simple[K, V]) Get(k K) (v V, err error) {
-
 	c.mux.Lock()
 	ey, ok := c.pool[k].check()
 	if ok {

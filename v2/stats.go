@@ -5,7 +5,7 @@ import (
 	"sync/atomic"
 )
 
-// IStats interface of stats
+// IStats 如果想要自定义统计，可以实现该接口并在 Cache 里 SetStats。Cache 默认无统计
 type IStats interface {
 	IncHit()
 	IncMiss()
@@ -13,7 +13,7 @@ type IStats interface {
 	IncEvict(uint64)
 }
 
-// Stats ...
+// Stats IStats 的简单实现
 type Stats struct {
 	Hit   uint64
 	Miss  uint64
@@ -31,7 +31,7 @@ func (st *Stats) IncMiss() {
 	atomic.AddUint64(&st.Miss, 1)
 }
 
-// IncWait increment wait count
+// IncWait 如果有并发，其他 goroutine 等待次数
 func (st *Stats) IncWait() {
 	atomic.AddUint64(&st.Wait, 1)
 }
