@@ -4,5 +4,8 @@ start:
 	fi
 	go run *.go
 
+tag:
+	./tag.sh
+
 lint:
 	cd src && golangci-lint run ./...
