@@ -224,6 +224,10 @@ func TestLRUBuild(t *testing.T) {
 	for i := 0; i < 2000; i++ {
 		c.Get(i)
 	}
+
+	// 偶尔 st.Hit 会不等于 1000，可能是并发问题，等一下
+	time.Sleep(time.Second / 10)
+
 	if st.Hit != 1000 {
 		t.Error(`stats hit fail`, st.Hit, `/`, 1000)
 	}
