@@ -15,13 +15,15 @@ jobs:
         with:
           go-version: 1.21
       - name: Check out repository code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
+          fetch-depth: 0
           path: 'v2'
           ref: 'v2'
       - name: Check out test code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
+          fetch-depth: 0
           path: 'dev'
           ref: 'dev'
       - name: Do testing
